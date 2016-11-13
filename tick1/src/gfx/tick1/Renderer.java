@@ -1,6 +1,7 @@
 package gfx.tick1;
 
 import java.awt.image.BufferedImage;
+import java.util.Vector;
 
 public class Renderer {
 
@@ -48,11 +49,19 @@ public class Renderer {
         double n = object.getPhong_n();
 
         // TODO: Calculate L, V, and R
+        Vector3 L = light.getPosition().subtract(P).normalised();
+        Vector3 R = L.reflectIn(N);
+        Vector3 V = P.scale(-1).normalised();
         // TODO: Calculate NdotL and RdotV
+        double NdotL = N.dot(L);
+        double RdotV = R.dot(V);
         // TODO: Calculate Vector3 ambient, diffuse, and specular terms
+        Vector3 ambient = C_diff.scale(I_a);
+        Vector3 diffuse = C_diff.scale(I).scale(k_d).scale(Math.max(0,NdotL));
+        Vector3 specular = C_spec.scale(I).scale(k_s).scale(Math.pow(Math.max(0,RdotV),n));
         // TODO: return ambient+diffuse+specular
+        return ambient.add(diffuse).add(specular);
 
-        return object.getColour();
     }
 
     public BufferedImage render(Scene scene) {
