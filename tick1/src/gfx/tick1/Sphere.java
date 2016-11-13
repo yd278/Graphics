@@ -44,7 +44,10 @@ public class Sphere {
             double s1 = (-b + delta) / (2 * a);
             double s2 = (-b - delta) / (2 * a);
             double mins = Math.min(s1, s2);
-            if (mins > 0) return new RaycastHit(this, mins, D.scale(mins), D.scale(mins).subtract(position).normalised());
+            if (mins > 0){
+                Vector3 location = D.scale(mins);
+                return new RaycastHit(this, mins, location, this.getNormalAt(location));
+            }
         }
         return new RaycastHit();
     }
