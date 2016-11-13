@@ -37,11 +37,15 @@ public class Sphere {
 
         double a = D.dot(D);
         double b = 2 * D.dot(O.subtract(C));
-        double c = (O.subtract(C)).dot(O.subtract(C)) - Math.pow(r,2);
-        
-        // TODO: Determine if ray and sphere intersect
-        // TODO: Work out point of intersection
-        // TODO: Return a RaycastHit that includes the object, ray distance, point, and normal vector
+        double c = (O.subtract(C)).dot(O.subtract(C)) - Math.pow(r, 2);
+
+        double delta = Math.sqrt(b * b - 4 * a * c);
+        if (delta > 0) {
+            double s1 = (-b + delta) / (2 * a);
+            double s2 = (-b - delta) / (2 * a);
+            double mins = Math.min(s1, s2);
+            if (mins > 0) return new RaycastHit(this, mins, D.scale(mins), D.scale(mins).subtract(position).normalised());
+        }
         return new RaycastHit();
     }
 
@@ -49,8 +53,19 @@ public class Sphere {
         return position.subtract(this.position).normalised();
     }
 
-    public Vector3 getColour() {return colour;}
-    public double getPhong_kD() {return phong_kD;}
-    public double getPhong_kS() {return phong_kS;}
-    public double getPhong_n() {return phong_n;}
+    public Vector3 getColour() {
+        return colour;
+    }
+
+    public double getPhong_kD() {
+        return phong_kD;
+    }
+
+    public double getPhong_kS() {
+        return phong_kS;
+    }
+
+    public double getPhong_n() {
+        return phong_n;
+    }
 }
