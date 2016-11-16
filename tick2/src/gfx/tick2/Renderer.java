@@ -44,8 +44,11 @@ public class Renderer {
         } else {
             Vector3 reflectedIllumination = new Vector3(0);
             // TODO: Calculate the direction R of the bounced ray
+            Vector3 R = ray.getDirection().scale(-1).reflectIn(N);
             // TODO: Spawn a reflectedRay with bias
+            Ray reflectedRay = new Ray(P.add(R.scale(EPSILON)), R);
             // TODO: Calculate reflectedIllumination by tracing reflectedRay
+            reflectedIllumination = trace(scene, reflectedRay, bouncesLeft - 1);
 
             // Scale direct and reflective illumination to conserve light
             directIllumination = directIllumination.scale(1.0 - object.getReflectivity());
@@ -96,11 +99,11 @@ public class Renderer {
             // TODO: Cast the shadowRay with findClosestIntersection to determine if P is in shadow or not, and set inShadow
             RaycastHit closestHit = scene.findClosestIntersection(shadowRay);
             double shadeDistance = closestHit.getDistance();
-            if (shadeDistance < light.getPosition().subtract(P).magnitude()){
+            if (shadeDistance < light.getPosition().subtract(P).magnitude()) {
                 inShadow = true;
             }
             // TODO: if not inShadow, add diffuse and specular to colourToReturn
-            if (! inShadow) {
+            if (!inShadow) {
                 colourToReturn = colourToReturn.add(diffuse).add(specular);
             }
         }
