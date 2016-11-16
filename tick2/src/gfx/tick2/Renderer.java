@@ -42,7 +42,7 @@ public class Renderer {
             return directIllumination;
 
         } else {
-        	Vector3 reflectedIllumination = new Vector3(0);
+            Vector3 reflectedIllumination = new Vector3(0);
             // TODO: Calculate the direction R of the bounced ray
             // TODO: Spawn a reflectedRay with bias
             // TODO: Calculate reflectedIllumination by tracing reflectedRay
@@ -86,16 +86,20 @@ public class Renderer {
             double NdotL = N.dot(L);
             double RdotV = R.dot(V);
             // TODO: Calculate diffuse and specular terms
-            Vector3 diffuse = C_diff.scale(I).scale(k_d).scale(Math.max(0,NdotL));
-            Vector3 specular = C_spec.scale(I).scale(k_s).scale(Math.pow(Math.max(0,RdotV),alpha));
+            Vector3 diffuse = C_diff.scale(I).scale(k_d).scale(Math.max(0, NdotL));
+            Vector3 specular = C_spec.scale(I).scale(k_s).scale(Math.pow(Math.max(0, RdotV), alpha));
             // TODO: Add diffuse and specular terms to colourToReturn
-            colourToReturn = colourToReturn.add(diffuse).add(specular);
+            // colourToReturn = colourToReturn.add(diffuse).add(specular);
             // Check if point P is in shadow from that light or not
             Ray shadowRay = new Ray(P.add(L.scale(EPSILON)), L);
             boolean inShadow = false;
-
             // TODO: Cast the shadowRay with findClosestIntersection to determine if P is in shadow or not, and set inShadow
+            RaycastHit closestHit = scene.findClosestIntersection(shadowRay);
+            SceneObject shadeObject = closestHit.getObjectHit();
             // TODO: if not inShadow, add diffuse and specular to colourToReturn
+            if (shadeObject == null) {
+                colourToReturn = colourToReturn.add(diffuse).add(specular);
+            }
         }
 
         return colourToReturn;
