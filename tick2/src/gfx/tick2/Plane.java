@@ -28,7 +28,8 @@ public class Plane extends SceneObject {
         Vector3 D = ray.getDirection();
         Vector3 Q = this.point;
         Vector3 N = this.normal;
-        //TODO 
+        double s = Q.subtract(O).dot(N) / D.dot(N);
+        if (s > 0) return new RaycastHit(this, s, O.add(D.scale(s)), N);
         return new RaycastHit();
     }
 
