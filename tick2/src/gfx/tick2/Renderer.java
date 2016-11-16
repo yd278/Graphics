@@ -95,9 +95,12 @@ public class Renderer {
             boolean inShadow = false;
             // TODO: Cast the shadowRay with findClosestIntersection to determine if P is in shadow or not, and set inShadow
             RaycastHit closestHit = scene.findClosestIntersection(shadowRay);
-            SceneObject shadeObject = closestHit.getObjectHit();
+            double shadeDistance = closestHit.getDistance();
+            if (shadeDistance < light.getPosition().subtract(P).magnitude()){
+                inShadow = true;
+            }
             // TODO: if not inShadow, add diffuse and specular to colourToReturn
-            if (shadeObject == null) {
+            if (! inShadow) {
                 colourToReturn = colourToReturn.add(diffuse).add(specular);
             }
         }
