@@ -80,9 +80,16 @@ public class Renderer {
             Vector3 I = light.getIlluminationAt(distanceToLight);
 
             // TODO: Calculate L, V, R, NdotL, and RdotV
+            Vector3 L = light.getPosition().subtract(P).normalised();
+            Vector3 R = L.reflectIn(N);
+            Vector3 V = P.scale(-1).normalised();
+            double NdotL = N.dot(L);
+            double RdotV = R.dot(V);
             // TODO: Calculate diffuse and specular terms
+            Vector3 diffuse = C_diff.scale(I).scale(k_d).scale(Math.max(0,NdotL));
+            Vector3 specular = C_spec.scale(I).scale(k_s).scale(Math.pow(Math.max(0,RdotV),alpha));
             // TODO: Add diffuse and specular terms to colourToReturn
-
+            colourToReturn = colourToReturn.add(diffuse).add(specular);
             // Check if point P is in shadow from that light or not
             Ray shadowRay = new Ray(P.add(L.scale(EPSILON)), L);
             boolean inShadow = false;
