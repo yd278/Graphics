@@ -35,16 +35,16 @@ public class Renderer {
         Vector3 N = closestHit.getNormal();
 
         // Calculate direct illumination at that point
-        Vector3 directIllumination = this.illuminate(scene, object, P, N);
+        Vector3 directIllumination = this.illuminate(scene, object, P, N, ray.getOrigin());
 
         // If no bounces left, or no reflection, return direct illumination only
         if (bouncesLeft == 0 || object.getReflectivity() == 0) {
             return directIllumination;
 
         } else {
-            Vector3 reflectedIllumination = new Vector3(0);
+            Vector3 reflectedIllumination;
             // TODO: Calculate the direction R of the bounced ray
-            Vector3 R = ray.getDirection().scale(-1).reflectIn(N);
+            Vector3 R = ray.getDirection().scale(-1).reflectIn(N).normalised();
             // TODO: Spawn a reflectedRay with bias
             Ray reflectedRay = new Ray(P.add(R.scale(EPSILON)), R);
             // TODO: Calculate reflectedIllumination by tracing reflectedRay
@@ -58,7 +58,9 @@ public class Renderer {
         }
     }
 
-    private Vector3 illuminate(Scene scene, SceneObject object, Vector3 P, Vector3 N) {
+
+
+    private Vector3 illuminate(Scene scene, SceneObject object, Vector3 P, Vector3 N, Vector3 C) {
 
         Vector3 colourToReturn = new Vector3(0);
 
@@ -85,7 +87,7 @@ public class Renderer {
             // TODO: Calculate L, V, R, NdotL, and RdotV
             Vector3 L = light.getPosition().subtract(P).normalised();
             Vector3 R = L.reflectIn(N);
-            Vector3 V = P.scale(-1).normalised();
+            Vector3 V = C.subtract(P).normalised();
             double NdotL = N.dot(L);
             double RdotV = R.dot(V);
             // TODO: Calculate diffuse and specular terms
@@ -109,6 +111,11 @@ public class Renderer {
         }
 
         return colourToReturn;
+    }
+
+    private Vector3 illuminate(Scene scene, SceneObject object, Vector3 P, Vector3 N) {
+        Vector3 defaultCamera = new Vector3(0);
+        return illuminate(scene, object, P, N, defaultCamera);
     }
 
     public BufferedImage render(Scene scene) {
