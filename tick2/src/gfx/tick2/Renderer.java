@@ -104,7 +104,8 @@ public class Renderer {
             }
             // TODO: if not inShadow, add diffuse and specular to colourToReturn
             if (!inShadow) {
-                colourToReturn = colourToReturn.add(diffuse).add(specular);
+                colourToReturn = colourToReturn.add(diffuse);
+                if(L.dot(N) > 0) colourToReturn = colourToReturn.add(specular);
             }
         }
 
