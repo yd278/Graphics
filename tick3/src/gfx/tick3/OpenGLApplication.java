@@ -279,10 +279,22 @@ public class OpenGLApplication {
         // LOAD VERTEX NORMALS
         // ---------------------------------------------------------------
 
-        // TODO: Put normal array into a buffer in CPU memory
-        // TODO: Create an OpenGL buffer and load it with normal data
-        // TODO: Get the location of the "normal" variable in the shader
-        // TODO: Specify how to access the variable, and enbale it
+        // Put normal array into a buffer in CPU memory
+        FloatBuffer normal_buffer = BufferUtils.createFloatBuffer(vertNormals.length);
+        normal_buffer.put(vertNormals).flip();
+
+        //  Create an OpenGL buffer and load it with normal data
+        int normal_handle = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, normal_handle);
+        glBufferData(GL_ARRAY_BUFFER, normal_buffer, GL_STATIC_DRAW);
+
+        //  Get the location of the "normal" variable in the shader
+        int normal_loc = glGetAttribLocation(shaders_handle, "normal");
+        //  Specify how to access the variable, and enbale it
+        if(normal_loc != -1){
+            glVertexAttribPointer(normal_loc, 3, GL_FLOAT, false, 0, 0);
+            glEnableVertexAttribArray(normal_loc);
+        }
 
         // ---------------------------------------------------------------
         // LOAD VERTEX INDICES
