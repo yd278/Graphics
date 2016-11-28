@@ -16,6 +16,8 @@ void main()
 	vec3 N = frag_normal;                   // Normal in world coordinates
 
     // TODO: calculate reflected colour instead of abs(frag_normal) below
-    colour = abs(frag_normal);
+    float NdotL;
+    NdotL = dot(N,L);
+    colour = C_diff * I_a + C_diff * k_d * I * max(0.0, NdotL);
 
 }

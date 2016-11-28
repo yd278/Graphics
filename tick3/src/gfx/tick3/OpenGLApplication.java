@@ -290,7 +290,7 @@ public class OpenGLApplication {
 
         //  Get the location of the "normal" variable in the shader
         int normal_loc = glGetAttribLocation(shaders_handle, "normal");
-        //  Specify how to access the variable, and enbale it
+        //  Specify how to access the variable, and enable it
         if(normal_loc != -1){
             glVertexAttribPointer(normal_loc, 3, GL_FLOAT, false, 0, 0);
             glEnableVertexAttribArray(normal_loc);
