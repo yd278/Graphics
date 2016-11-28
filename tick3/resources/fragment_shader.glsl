@@ -15,7 +15,7 @@ void main()
 	vec3 L = normalize(vec3(2, 1.5, -0.5)); // The light direction as a unit vector
 	vec3 N = frag_normal;                   // Normal in world coordinates
 
-    // TODO: calculate reflected colour instead of abs(frag_normal) below
+    //  calculate reflected colour instead of abs(frag_normal) below
     float NdotL;
     NdotL = dot(N,L);
     colour = C_diff * I_a + C_diff * k_d * I * max(0.0, NdotL);

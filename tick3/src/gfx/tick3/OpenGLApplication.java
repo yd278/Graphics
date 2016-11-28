@@ -21,7 +21,8 @@ import static org.lwjgl.opengl.GL.createCapabilities;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class OpenGLApplication {
@@ -35,22 +36,19 @@ public class OpenGLApplication {
 
     // Size of height map in world units
     private static float MAP_SIZE = 10;
+    // Filenames for vertex and fragment shader source code
+    private final String VSHADER_FN = "resources/vertex_shader.glsl";
+    private final String FSHADER_FN = "resources/fragment_shader.glsl";
     private Camera camera;
     private long window;
-
     private ShaderProgram shaders;
     private float[][] heightmap;
     private int no_of_triangles;
     private int vertexArrayObj;
-
     // Callbacks for input handling
     private GLFWCursorPosCallback cursor_cb;
     private GLFWScrollCallback scroll_cb;
     private GLFWKeyCallback key_cb;
-
-    // Filenames for vertex and fragment shader source code
-    private final String VSHADER_FN = "resources/vertex_shader.glsl";
-    private final String FSHADER_FN = "resources/fragment_shader.glsl";
 
     public OpenGLApplication(String heightmapFilename) {
 
@@ -101,13 +99,13 @@ public class OpenGLApplication {
         shaders = new ShaderProgram(vertShader, fragShader, "colour");
 
         // Initialize mesh data in CPU memory
-        float vertPositions[] = initializeVertexPositions( heightmap );
-        int indices[] = initializeVertexIndices( heightmap );
-        float vertNormals[] = initializeVertexNormals( heightmap );
+        float vertPositions[] = initializeVertexPositions(heightmap);
+        int indices[] = initializeVertexIndices(heightmap);
+        float vertNormals[] = initializeVertexNormals(heightmap);
         no_of_triangles = indices.length;
 
         // Load mesh data onto GPU memory
-        loadDataOntoGPU( vertPositions, indices, vertNormals );
+        loadDataOntoGPU(vertPositions, indices, vertNormals);
     }
 
     private void initializeInputs() {
@@ -156,65 +154,116 @@ public class OpenGLApplication {
         glfwSetKeyCallback(window, key_cb);
     }
 
+    private void assignInVertPos(float[] vertPos, int triIndex, int pointIndex, float x, float y, float z) {
+        vertPos[triIndex * 9 + pointIndex * 3] = x;
+        vertPos[triIndex * 9 + pointIndex * 3 + 1] = y;
+        vertPos[triIndex * 9 + pointIndex * 3 + 2] = z;
+    }
+
+
     /**
      * Create an array of vertex psoutions.
      *
      * @param heightmap 2D array with the heightmap
      * @return Vertex positions in the format { x0, y0, z0, x1, y1, z1, ... }
      */
-    public float[] initializeVertexPositions( float[][] heightmap ) {
+    public float[] initializeVertexPositions(float[][] heightmap) {
         //generate and upload vertex data
+        int heightmap_width_px = heightmap[0].length;
+        int heightmap_height_px = heightmap.length;
+        float start_x = -MAP_SIZE / 2; // X coordinate of first vertex
+        float start_z = -MAP_SIZE / 2; // Z coordinate of first vertex
+        // Gaps between vertices along the X and Z axes
+        float delta_x = MAP_SIZE / heightmap_width_px;
+        float delta_z = MAP_SIZE / heightmap_height_px;
+        // create float array for vertPositions of the right size
+        float[] vertPositions = new float[heightmap_width_px * heightmap_height_px * 3];
+        //x -- width -- col
+        //z -- height -- row
+        int top = 0;
+        for (int row = 0; row < heightmap_height_px; row++) {
+            for (int col = 0; col < heightmap_width_px; col++) {
+                float x, y, z;
+                x = start_x + col * delta_x;
+                z = start_z + row * delta_z;
+                y = heightmap[row][col];
+                vertPositions[top++] = x;
+                vertPositions[top++] = y;
+                vertPositions[top++] = z;
 
-        // TODO: Replace the table below with your code generating vertex positions from the heightmap.
-        float[] vertPositions = new float[] {
-                -2,  2, -2, -2,  2,  2,  2,  2, -2,
-                -2,  2,  2,  2,  2,  2,  2,  2, -2,
-                -2, -2,  2, -2, -2, -2,  2, -2,  2,
-                -2, -2, -2,  2, -2, -2,  2, -2,  2,
-                -2,  2,  2, -2, -2,  2,  2,  2,  2,
-                -2, -2,  2,  2, -2,  2,  2,  2,  2,
-                -2, -2, -2, -2,  2, -2,  2, -2, -2,
-                -2,  2, -2,  2,  2, -2,  2, -2, -2,
-                -2, -2, -2, -2, -2,  2, -2,  2, -2,
-                -2, -2,  2, -2,  2,  2, -2,  2, -2,
-                2,  2, -2,  2,  2,  2,  2, -2, -2,
-                2,  2,  2,  2, -2,  2,  2, -2, -2
-        };
+            }
+        }
+
 
         return vertPositions;
     }
 
-    public int[] initializeVertexIndices( float[][] heightmap ) {
+    /**
+     * Create an array of vertex indices.
+     *
+     * @param heightmap 2D array with the heightmap
+     * @return Table with the vartex indices, three indices for
+     * each triangle
+     */
+    public int[] initializeVertexIndices(float[][] heightmap) {
+        int heightmap_width_px = heightmap[0].length;
+        int heightmap_height_px = heightmap.length;
+        //TODO: create int array for indices of the right size
+        int[] indices = new int[(heightmap_width_px - 1) * (heightmap_height_px - 1) * 6];
+        int index_count = 0;
+        for (int row = 0; row < heightmap_height_px - 1; row++) {
+            for (int col = 0; col < heightmap_width_px - 1; col++) {
+                //TODO: Get vert_index for the corresponding vertex at (row,col)
+                int vert_index = col + row * heightmap_width_px;
+                //TODO: Add three indices to index_count for lower triangle ‘A’
+                indices[index_count++] = vert_index;
+                indices[index_count++] = vert_index + heightmap_width_px;
+                indices[index_count++] = vert_index + heightmap_width_px + 1;
 
-        // TODO: Replace the table below with your code geneting indices from the heightmap.
 
-        int[] indices = new int[] {
-                0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,
-                12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-                24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
-        };
-
+                //TODO: Add three indices to index_count for upper triangle ‘B’
+                indices[index_count++] = vert_index;
+                indices[index_count++] = vert_index + heightmap_width_px + 1;
+                indices[index_count++] = vert_index + 1;
+            }
+        }
         return indices;
     }
 
-    public float[] initializeVertexNormals( float[][] heightmap ) {
 
-        // TODO: Replace the table below with your code geneting vertex normals.
-        float[] vertNormals = new float[] {
-                0,  1,  0,  0,  1,  0,  0,  1,  0,
-                0,  1,  0,  0,  1,  0,  0,  1,  0,
-                0, -1,  0,  0, -1,  0,  0, -1,  0,
-                0, -1,  0,  0, -1,  0,  0, -1,  0,
-                0,  0,  1,  0,  0,  1,  0,  0,  1,
-                0,  0,  1,  0,  0,  1,  0,  0,  1,
-                0,  0, -1,  0,  0, -1,  0,  0, -1,
-                0,  0, -1,  0,  0, -1,  0,  0, -1,
-                -1,  0,  0, -1,  0,  0, -1,  0,  0,
-                -1,  0,  0, -1,  0,  0, -1,  0,  0,
-                1,  0,  0,  1,  0,  0,  1,  0,  0,
-                1,  0,  0,  1,  0,  0,  1,  0,  0
-        };
-
+    /**
+     * Create an array of vertex normals.
+     *
+     * @param heightmap 2D array with the heightmap
+     * @return Array of vertex normals in the format { n_x0, n_y0,
+     * nz0, n_x1, n_y1, n_z1, ... }
+     */
+    public float[] initializeVertexNormals(float[][] heightmap) {
+        int heightmap_width_px = heightmap[0].length;
+        int heightmap_height_px = heightmap.length;
+        int num_verts = heightmap_width_px * heightmap_height_px;
+        float[] vertNormals = new float[3 * num_verts];
+        //Initialize each normal to (0,1,0) so that valid normals can be found at edges
+        for (int i = 1; i < 3 * num_verts; i += 3) vertNormals[i] = 1;
+        //x -- width -- col
+        //z -- height -- row
+        int cnt = 0;
+        float delta_x = MAP_SIZE / heightmap_width_px;
+        float delta_z = MAP_SIZE / heightmap_height_px;
+        for (int row = 1; row < heightmap_height_px - 1; row++) {
+            for (int col = 1; col < heightmap_width_px - 1; col++) {
+                int vertIndex = col + row * heightmap_width_px;
+                // Create Vector3f Tx
+                Vector3f Tx = new Vector3f(2 * delta_x, heightmap[row][col + 1] - heightmap[row][col - 1], 0);
+                // Create Vector3f Tz
+                Vector3f Tz = new Vector3f(0, heightmap[row + 1][col] - heightmap[row - 1][col], 2 * delta_z);
+                // Calculate Vector3f vertNormal by as the normalized cross product of vecNx and vecNz and put in vertNormals
+                Vector3f D = Tz.cross(Tx).normalize();
+                vertNormals[vertIndex * 3] = D.x;
+                vertNormals[vertIndex * 3 + 1] = D.y;
+                vertNormals[vertIndex * 3 + 2] = D.z;
+            }
+        }
         return vertNormals;
     }
 
@@ -242,7 +291,7 @@ public class OpenGLApplication {
         }
     }
 
-    public void loadDataOntoGPU( float[] vertPositions, int[] indices, float[] vertNormals ) {
+    public void loadDataOntoGPU(float[] vertPositions, int[] indices, float[] vertNormals) {
 
         int shaders_handle = shaders.getHandle();
 
@@ -291,7 +340,7 @@ public class OpenGLApplication {
         //  Get the location of the "normal" variable in the shader
         int normal_loc = glGetAttribLocation(shaders_handle, "normal");
         //  Specify how to access the variable, and enable it
-        if(normal_loc != -1){
+        if (normal_loc != -1) {
             glVertexAttribPointer(normal_loc, 3, GL_FLOAT, false, 0, 0);
             glEnableVertexAttribArray(normal_loc);
         }
